@@ -2,6 +2,10 @@ from keras import backend as K
 from keras.models import Model
 from keras.layers import (BatchNormalization, Conv1D, Dense, Input, 
     TimeDistributed, Activation, Bidirectional, SimpleRNN, GRU, LSTM)
+from keras.utils.training_utils import multi_gpu_model
+
+def parallelize(model, gpus=1):
+    return multi_gpu_model(model, gpus=gpus)
 
 def simple_rnn_model(input_dim, output_dim=29):
     """ Build a recurrent network for speech 
@@ -58,8 +62,7 @@ def cnn_rnn_model(input_dim, filters, kernel_size, conv_stride,
     bn_cnn = BatchNormalization(name='bn_conv_1d')(conv_1d)
     print ("....")
     # Add a recurrent layer
-    simp_rnn = SimpleRNN(units, activation='relu',
-        return_sequences=True, implementation=2, name='rnn')(bn_cnn)
+    simp_rnn = GRU(units, activation='relu', return_sequences=True, implementation=2, name='rnn')(bn_cnn)
     print (".....")
     # TODO: Add batch normalization
     bn_rnn = BatchNormalization(name='bn_rnn')(simp_rnn)
