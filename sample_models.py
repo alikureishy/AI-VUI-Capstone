@@ -1,7 +1,8 @@
 from keras import backend as K
 from keras.models import Model
-from keras.layers import (BatchNormalization, Conv1D, Dense, Input, 
-    TimeDistributed, Activation, Bidirectional, SimpleRNN, GRU, LSTM)
+from keras.layers import BatchNormalization, Conv1D, Dense, Input
+from keras.layers import TimeDistributed, Activation, Bidirectional
+from keras.layers import SimpleRNN, GRU, LSTM, Dropout #, ReLU
 #from keras.utils.training_utils import multi_gpu_model
 
 #def parallelize(model, gpus=1):
@@ -141,9 +142,9 @@ def bidirectional_rnn_model(input_dim, units, recur_layers, output_dim=29):
     return model
 
 def custom_rnn_model(input_dim,
-                     conv_filters, conv_kernel_size, conv_stride, conv_border_mode,
-                     recur_layers, recur_units, recur_cells,
-                     output_dim=29):
+                     conv_filters, conv_kernel_size, conv_stride, conv_border_mode, conv_batch_mode, conv_dropout,
+                     recur_layers, recur_units, recur_cells, recur_bidis, recur_batchnorms, recur_dropouts,
+                     output_dropout, output_dim=29):
     """ Build a custom model for ASR using options for CNNs and BRNNs
     """
     # Main acoustic input (input_data)
@@ -153,22 +154,31 @@ def custom_rnn_model(input_dim,
     layer = cnn = Conv1D(conv_filters, conv_kernel_size, 
                           strides=conv_stride, 
                           padding=conv_border_mode,
-                          activation='relu',
                           name='conv1d')(layer)
-    # Add batch normalization
-    layer = BatchNormalization(name='bn_cnn')(layer)
+    if conv_batch_mode:
+        layer = BatchNormalization(name='bn_cnn')(layer)
+    layer = cnn = Activation('relu')(layer) # Activation layer should come AFTER batch norm
+    layer = cnn = Dropout(rate=conv_dropout)(layer) # Dropout should come after activations
+    # -------------------------------
     
-    # TODO: Add bidirectional recurrent layers
+    # TODO: Add recurrent layers
     rnns = layer
     if recur_layers > 0:
         for i in range(recur_layers):
-            rnn = recur_cells[i](recur_units[i], activation='relu', return_sequences=True, implementation=2, name="rnn_{}".format(i))
-            layer = rnns = Bidirectional(rnn, name="brnn_{}".format(i), merge_mode='concat', weights=None)(rnns)
-        layer = rnns = BatchNormalization(name="bn_rnn")(layer)
+            if recur_bidis[i]:
+                rnn = recur_cells[i](recur_units[i], return_sequences=True, implementation=2, name="rnn_{}".format(i))
+                layer = rnns = Bidirectional(rnn, name="bidi_rnn_{}".format(i), merge_mode='concat', weights=None)(rnns)
+            else:
+                layer = rnns = recur_cells[i](recur_units[i], return_sequences=True, implementation=2, name="rnn_{}".format(i))(layer)
+            if recur_batchnorms[i]:
+                layer = rnns = BatchNormalization(name="bn_rnn_{}".format(i))(layer)
+            layer = rnns = Activation('relu')(layer) # Activation should come AFTER batch norm
+            layer = rnns = Dropout(rate=recur_dropouts[i])(layer) # Dropout should come after activations
     # -------------------------------
 
     # TODO: Add a TimeDistributed(Dense(output_dim)) layer
     layer = time_dense = TimeDistributed(Dense(units=output_dim))(layer)
+    #layer = time_dense = Dropout(rate=output_dropout)
 
     # Add softmax activation layer
     y_pred = Activation('softmax', name='softmax')(layer)
