@@ -3,10 +3,12 @@ from keras.models import Model
 from keras.layers import BatchNormalization, Conv1D, Dense, Input
 from keras.layers import TimeDistributed, Activation, Bidirectional
 from keras.layers import SimpleRNN, GRU, LSTM, Dropout #, ReLU
-#from keras.utils.training_utils import multi_gpu_model
+from keras.utils.training_utils import multi_gpu_model
 
-#def parallelize(model, gpus=1):
-#    return multi_gpu_model(model, gpus=gpus)
+def parallelize(model, gpus=1):
+    wrapper = multi_gpu_model(model, gpus=gpus)
+    wrapper.output_length = model.output_length
+    return wrapper
 
 def simple_rnn_model(input_dim, output_dim=29):
     """ Build a recurrent network for speech 
