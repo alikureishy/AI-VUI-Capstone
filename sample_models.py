@@ -2,13 +2,13 @@ from keras import backend as K
 from keras.models import Model
 from keras.layers import BatchNormalization, Conv1D, Dense, Input
 from keras.layers import TimeDistributed, Activation, Bidirectional
-from keras.layers import SimpleRNN, GRU, LSTM, Dropout #, ReLU
-from keras.utils.training_utils import multi_gpu_model
+from keras.layers import SimpleRNN, GRU, LSTM, Dropout
 
-def parallelize(model, gpus=1):
-    wrapper = multi_gpu_model(model, gpus=gpus)
-    wrapper.output_length = model.output_length
-    return wrapper
+#from keras.utils.training_utils import multi_gpu_model
+#def parallelize(model, gpus=1):
+#    wrapper = multi_gpu_model(model, gpus=gpus)
+#    wrapper.output_length = model.output_length
+#    return wrapper
 
 def simple_rnn_model(input_dim, output_dim=29):
     """ Build a recurrent network for speech 
@@ -198,12 +198,12 @@ def final_model():
     # Main acoustic input
     input_data = Input(name='the_input', shape=(None, input_dim))
     # TODO: Specify the layers in your network
-    ...
+    #...
     # TODO: Add softmax activation layer
-    y_pred = ...
+    #y_pred = ...
     # Specify the model
     model = Model(inputs=input_data, outputs=y_pred)
     # TODO: Specify model.output_length
-    model.output_length = ...
+    #model.output_length = ...
     print(model.summary())
     return model
