@@ -3,6 +3,7 @@ from sample_models import custom_rnn_model
 from keras.layers import SimpleRNN, GRU, LSTM
 import argparse
 import sys
+import os
 from os.path import join
 
 if __name__ == '__main__':
@@ -27,16 +28,19 @@ if __name__ == '__main__':
     parser.add_argument('-rl', dest='recur_layers', type=int, help='Number of recurrent layers')
     parser.add_argument('-ru', dest='recur_units', nargs='*', type=int, help="List of 'rl' recurrent unit sizes")
     parser.add_argument('-rc', dest='recur_cells', nargs='*', type=int, help="List of 'rl' recurrent cell types (0: SimpleRNN, 1: GRU, or 2: LSTM)")
-    parser.add_argument('-rb', dest='recur_bidis', nargs='*', type=bool, help="List of 'rl' flags indicating whether the layer is bidirectional ('True', 'False')")
+    parser.add_argument('-rb', dest='recur_bidis', nargs='*', type=int, help="List of 'rl' flags indicating whether the layer is bidirectional ('True', 'False')")
     parser.add_argument('-rd', dest='recur_dropouts', nargs='*', type=float, help="List of 'rl' dropouts (between 0.0 and 1.0)")
     parser.add_argument('-dd', dest='dense_dropout', type=float, help="Dropout for fully connected output layer")
     
     args = parser.parse_args()
-    print (args)
     args.recur_cells = map(lambda x: SimpleRNN if x is 0 else GRU if x is 1 else LSTM, list(args.recur_cells))
+    args.recur_bidis = map(lambda x: False if x is 0 else True, list(args.recur_bidis))
+    print (args)
     
-    model_weights_path = join(args.output, "model_{}.hd5".format(args.id))
-    model_hist_path = join(args.output, "model_{}.pickle".format(args.id))
+    model_weights_path = "model_{}.h5".format(args.id) #join(os.getcwd(), args.output, "model_{}.h5".format(args.id))
+    model_hist_path = "model_{}.pickle".format(args.id) #join(os.getcwd(), args.output, "model_{}.pickle".format(args.id))
+    print("\tModel weights path: {}".format(model_weights_path))
+    print("\tModel train hist path: {}".format(model_hist_path))
     
     # --------
     model_5 = custom_rnn_model(input_dim=13, # change to 13 if you would like to use MFCC features
@@ -45,8 +49,9 @@ if __name__ == '__main__':
                                output_dropout=args.dense_dropout, output_dim=29)
     
     train_model(input_to_softmax=model_5, 
-            pickle_path='model_5.pickle', 
-            save_model_path='model_5.h5', 
+#	    epochs=1,
+            pickle_path=model_hist_path, 
+            save_model_path=model_weights_path, 
             spectrogram=False) # change to False if you would like to use MFCC features
     
     print ("Training complete!")
