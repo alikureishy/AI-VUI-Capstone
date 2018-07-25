@@ -6,6 +6,12 @@ import sys
 from os.path import join
 
 if __name__ == '__main__':
+    from keras.backend.tensorflow_backend import set_session
+    import tensorflow as tf 
+    config = tf.ConfigProto()
+    config.gpu_options.per_process_gpu_memory_fraction = 0.5
+    set_session(tf.Session(config=config))
+    
     print ("###############################################")
     print ("#                 ASR Trainer                 #")
     print ("###############################################")
@@ -17,16 +23,16 @@ if __name__ == '__main__':
     parser.add_argument('-ck', dest='kernel_size', type=int, help='Size of convolution kernel')
     parser.add_argument('-cs', dest='conv_stride', type=int, help='Convolutional stride')
     parser.add_argument('-cp', dest='conv_padding', type=str, help="Convolutional padding mode ('same', or 'valid')")
-    parser.add_argument('-cd', dest='conv_dropout', type=int, help='Dropout for convolutional output (between 0.0 and 1.0)')
+    parser.add_argument('-cd', dest='conv_dropout', type=float, help='Dropout for convolutional output (between 0.0 and 1.0)')
     parser.add_argument('-rl', dest='recur_layers', type=int, help='Number of recurrent layers')
-    parser.add_argument('-ru', dest='recur_units', nargs='*', type=int, help="List of 'rc' recurrent unit sizes")
-    parser.add_argument('-rc', dest='recur_cells', nargs='*', type=int, help="List of 'rc' recurrent cell types (0: SimpleRNN, 1: GRU, or 2: LSTM)")
-    parser.add_argument('-rb', dest='recur_bidis', nargs='*', type=bool, help="List of 'rc' flags indicating whether the layer is bidirectional ('True', 'False')")
-    parser.add_argument('-rd', dest='recur_dropouts', nargs='*', type=float, help="List of 'rc' dropouts (between 0.0 and 1.0)")
+    parser.add_argument('-ru', dest='recur_units', nargs='*', type=int, help="List of 'rl' recurrent unit sizes")
+    parser.add_argument('-rc', dest='recur_cells', nargs='*', type=int, help="List of 'rl' recurrent cell types (0: SimpleRNN, 1: GRU, or 2: LSTM)")
+    parser.add_argument('-rb', dest='recur_bidis', nargs='*', type=bool, help="List of 'rl' flags indicating whether the layer is bidirectional ('True', 'False')")
+    parser.add_argument('-rd', dest='recur_dropouts', nargs='*', type=float, help="List of 'rl' dropouts (between 0.0 and 1.0)")
     parser.add_argument('-dd', dest='dense_dropout', type=float, help="Dropout for fully connected output layer")
     
     args = parser.parse_args()
-    args.recur_cells = map(lambda x: SimpleRNN if x is 0 else GRU if x is 1 else LSTM, args.recur_cells)
+    args.recur_cells = map(lambda x: SimpleRNN if x is 0 else GRU if x is 1 else LSTM, list(args.recur_cells))
     
     model_weights_path = join(args.output, "model_{}.hd5".format(args.id))
     model_hist_path = join(args.output, "model_{}.pickle".format(args.id))
