@@ -32,6 +32,7 @@ if __name__ == '__main__':
     parser.add_argument('-dd', dest='dense_dropout', type=float, help="Dropout for fully connected output layer")
     
     args = parser.parse_args()
+    print (args)
     args.recur_cells = map(lambda x: SimpleRNN if x is 0 else GRU if x is 1 else LSTM, list(args.recur_cells))
     
     model_weights_path = join(args.output, "model_{}.hd5".format(args.id))
