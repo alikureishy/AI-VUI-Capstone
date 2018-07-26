@@ -31,6 +31,7 @@ if __name__ == '__main__':
     parser.add_argument('-rb', dest='recur_bidis', nargs='*', type=int, help="List of 'rl' flags indicating whether the layer is bidirectional ('True', 'False')")
     parser.add_argument('-rd', dest='recur_dropouts', nargs='*', type=float, help="List of 'rl' dropouts (between 0.0 and 1.0)")
     parser.add_argument('-dd', dest='dense_dropout', type=float, help="Dropout for fully connected output layer")
+    parser.add_argument('-e', dest='num_epochs', required=False, default=20, type=int, help="Number of epochs to train")
     
     args = parser.parse_args()
     args.recur_cells = map(lambda x: SimpleRNN if x is 0 else GRU if x is 1 else LSTM, list(args.recur_cells))
@@ -49,7 +50,7 @@ if __name__ == '__main__':
                                output_dropout=args.dense_dropout, output_dim=29)
     
     train_model(input_to_softmax=model_5, 
-#	    epochs=1,
+            epochs=args.num_epochs,
             pickle_path=model_hist_path, 
             save_model_path=model_weights_path, 
             spectrogram=False) # change to False if you would like to use MFCC features
